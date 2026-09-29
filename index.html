@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BAMBUS AI</title>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Phosphor Icons -->
+    
+    <!-- Phosphor Icons (Leichtgewichtige, moderne Icons wie bei OpenAI) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <style>
@@ -18,181 +20,203 @@
             color: #0d0d0d;
         }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #e5e5e5;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #d4d4d4;
-        }
+        /* Custom Scrollbar for Chat */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #d4d4d4; }
 
         /* Message animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .animate-message {
-            animation: fadeIn 0.3s ease-out forwards;
-        }
+        .animate-message { animation: fadeIn 0.3s ease-out forwards; }
 
-        /* Loading indicator animation */
+        /* Loading Dots Animation */
         .dot-flashing {
-            position: relative;
-            width: 6px;
-            height: 6px;
-            border-radius: 5px;
-            background-color: #0d0d0d;
-            animation: dot-flashing 1s infinite linear alternate;
+            position: relative; width: 6px; height: 6px; border-radius: 5px;
+            background-color: #0d0d0d; animation: dot-flashing 1s infinite linear alternate;
             animation-delay: 0.5s;
         }
         .dot-flashing::before, .dot-flashing::after {
-            content: '';
-            display: inline-block;
-            position: absolute;
-            top: 0;
-            width: 6px;
-            height: 6px;
-            border-radius: 5px;
-            background-color: #0d0d0d;
+            content: ''; display: inline-block; position: absolute; top: 0;
+            width: 6px; height: 6px; border-radius: 5px; background-color: #0d0d0d;
         }
-        .dot-flashing::before {
-            left: -12px;
-            animation: dot-flashing 1s infinite alternate;
-            animation-delay: 0s;
-        }
-        .dot-flashing::after {
-            left: 12px;
-            animation: dot-flashing 1s infinite alternate;
-            animation-delay: 1s;
-        }
+        .dot-flashing::before { left: -12px; animation: dot-flashing 1s infinite alternate; animation-delay: 0s; }
+        .dot-flashing::after { left: 12px; animation: dot-flashing 1s infinite alternate; animation-delay: 1s; }
+        
         @keyframes dot-flashing {
             0% { background-color: #0d0d0d; }
             50%, 100% { background-color: #e5e5e5; }
         }
 
         /* Modal Transitions */
-        .modal-active {
-            opacity: 1 !important;
-            pointer-events: auto !important;
-        }
-        .modal-content-active {
-            transform: scale(1) translateY(0) !important;
-            opacity: 1 !important;
-        }
+        .modal-active { opacity: 1 !important; pointer-events: auto !important; }
+        .modal-content-active { transform: scale(1) translateY(0) !important; opacity: 1 !important; }
+
+        /* Toast Animation */
+        .toast-active { transform: translateY(0) !important; opacity: 1 !important; }
+
+        /* Toggle Switch Custom CSS */
+        .toggle-checkbox:checked { right: 0; border-color: #10a37f; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #10a37f; }
+        .toggle-checkbox { right: 4px; z-index: 1; border-color: #e5e5e5; transition: all 0.3s; }
+        .toggle-label { width: 2.5rem; height: 1.25rem; background-color: #e5e5e5; border-radius: 9999px; transition: all 0.3s; }
     </style>
 </head>
-<body class="h-screen flex overflow-hidden text-sm md:text-base relative">
+<body class="h-screen flex overflow-hidden text-sm md:text-base relative bg-white">
 
-    <aside class="w-[260px] bg-[#f9f9f9] flex-col justify-between hidden md:flex border-r border-gray-200">
-        <div class="p-3 flex flex-col gap-2">
+    <!-- Sidebar Desktop -->
+    <aside class="w-[260px] bg-[#f9f9f9] flex-col justify-between hidden md:flex border-r border-gray-200 z-20">
+        <div class="p-3 flex flex-col gap-1">
             <!-- Sidebar Header Actions -->
-            <div class="flex items-center justify-between text-gray-500 mb-4 px-2 pt-2">
+            <div class="flex items-center justify-between text-gray-500 mb-2 px-2 pt-2">
                 <button class="hover:bg-gray-200 p-2 rounded-lg transition-colors cursor-pointer" title="Seitenleiste schließen">
                     <i class="ph ph-sidebar-simple text-xl"></i>
                 </button>
-                <button onclick="location.reload()" class="hover:bg-gray-200 p-2 rounded-lg transition-colors cursor-pointer" title="Neuer Chat">
-                    <i class="ph ph-pencil-simple text-xl"></i>
+                <button onclick="resetChat()" class="hover:bg-gray-200 p-2 rounded-lg transition-colors cursor-pointer" title="Neuer Chat">
+                    <i class="ph ph-note-pencil text-xl text-black"></i>
                 </button>
             </div>
             
             <!-- Navigation Items -->
-            <button onclick="location.reload()" class="flex items-center gap-3 w-full hover:bg-gray-200 p-3 rounded-xl text-left transition-colors font-medium">
-                <i class="ph ph-chat-circle text-xl text-gray-600"></i>
+            <button onclick="resetChat()" class="flex items-center gap-3 w-full hover:bg-gray-200 px-3 py-2.5 rounded-lg text-left transition-colors font-medium">
+                <i class="ph ph-chat-circle text-lg"></i>
                 Neuer Chat
             </button>
-            <button id="btn-bilder" class="flex items-center gap-3 w-full hover:bg-gray-200 p-3 rounded-xl text-left transition-colors font-medium">
-                <i class="ph ph-image text-xl text-gray-600"></i>
+            <button onclick="openModal('modal-icloud')" class="flex items-center gap-3 w-full hover:bg-gray-200 px-3 py-2.5 rounded-lg text-left transition-colors font-medium">
+                <i class="ph ph-image text-lg"></i>
                 Bilder
             </button>
-            <button id="btn-research" class="flex items-center gap-3 w-full hover:bg-gray-200 p-3 rounded-xl text-left transition-colors font-medium">
-                <i class="ph ph-magnifying-glass text-xl text-gray-600"></i>
-                Deep Research
+            <button onclick="openModal('modal-plugins')" class="flex items-center gap-3 w-full hover:bg-gray-200 px-3 py-2.5 rounded-lg text-left transition-colors font-medium">
+                <i class="ph ph-puzzle-piece text-lg"></i>
+                Plugins
             </button>
+            <a href="https://de.wikipedia.org/wiki/Klabusterbeere" target="_blank" class="flex items-center gap-3 w-full hover:bg-gray-200 px-3 py-2.5 rounded-lg text-left transition-colors font-medium">
+                <i class="ph ph-magnifying-glass text-lg"></i>
+                Deep Research
+            </a>
         </div>
 
         <!-- Bottom Sidebar Actions -->
-        <div class="p-3 flex flex-col gap-1 text-sm font-medium border-t border-gray-200/60 mt-auto">
-            <button id="btn-settings" class="flex items-center gap-3 w-full hover:bg-gray-200 p-3 rounded-xl text-left transition-colors">
-                <i class="ph ph-gear text-lg text-gray-600"></i>
+        <div class="p-3 flex flex-col gap-1 text-sm font-medium border-gray-200/60 mt-auto relative">
+            <button onclick="openModal('modal-pricing')" class="flex items-center gap-3 w-full hover:bg-gray-200 px-3 py-2.5 rounded-lg text-left transition-colors">
+                <div class="bg-blue-100 text-blue-600 rounded-full p-1"><i class="ph ph-sparkle text-sm"></i></div>
+                Pläne und Preise
+            </button>
+            <button onclick="openModal('modal-settings')" class="flex items-center gap-3 w-full hover:bg-gray-200 px-3 py-2.5 rounded-lg text-left transition-colors">
+                <i class="ph ph-gear text-lg"></i>
                 Einstellungen
             </button>
-            <button id="btn-login-sidebar" class="flex items-center gap-3 w-full hover:bg-gray-200 p-3 rounded-xl text-left transition-colors">
-                <i class="ph ph-sign-in text-lg text-gray-600"></i>
-                <span id="sidebar-login-text">Anmelden</span>
+            <button onclick="openModal('modal-help')" class="flex items-center gap-3 w-full hover:bg-gray-200 px-3 py-2.5 rounded-lg text-left transition-colors">
+                <i class="ph ph-question text-lg"></i>
+                Hilfe
             </button>
+            
+            <div class="h-px bg-gray-200 my-1 mx-2"></div>
+            
+            <!-- Login / Profile Area -->
+            <div id="sidebar-auth-area" class="relative">
+                <button id="btn-login-sidebar" onclick="openModal('modal-login')" class="flex items-center gap-3 w-full hover:bg-gray-200 px-3 py-2.5 rounded-lg text-left transition-colors">
+                    <i class="ph ph-sign-in text-lg"></i>
+                    <span>Anmelden</span>
+                </button>
+                
+                <!-- Logged In User Button (Hidden initially) -->
+                <button id="btn-user-profile" onclick="toggleUserMenu()" class="hidden items-center gap-3 w-full hover:bg-gray-200 px-3 py-2.5 rounded-lg text-left transition-colors">
+                    <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-green-400 to-blue-500 text-white flex items-center justify-center font-bold text-xs">P</div>
+                    <span class="truncate flex-1">kleinerPipmaz</span>
+                    <i class="ph ph-dots-three text-lg text-gray-500"></i>
+                </button>
+
+                <!-- User Dropdown Menu -->
+                <div id="user-dropdown" class="absolute bottom-full left-0 w-full mb-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden flex-col py-1 z-30">
+                    <button class="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 text-left w-full text-sm">
+                        <i class="ph ph-user"></i> Profil
+                    </button>
+                    <button class="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 text-left w-full text-sm">
+                        <i class="ph ph-sliders-horizontal"></i> Custom Instructions
+                    </button>
+                    <div class="h-px bg-gray-100 my-1"></div>
+                    <button onclick="logout()" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 text-red-600 text-left w-full text-sm">
+                        <i class="ph ph-sign-out"></i> Abmelden
+                    </button>
+                </div>
+            </div>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col relative h-full bg-white">
+    <main class="flex-1 flex flex-col relative h-full bg-white z-10">
         
         <!-- Header -->
-        <header class="h-14 flex items-center justify-between px-4 absolute w-full top-0 z-10 bg-white/80 backdrop-blur-md">
+        <header class="h-14 flex items-center justify-between px-4 absolute w-full top-0 z-20 bg-white/90 backdrop-blur-sm">
             <div class="flex items-center gap-2 md:hidden">
                 <button class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg">
                     <i class="ph ph-list text-xl"></i>
                 </button>
             </div>
             
-            <button class="flex items-center gap-2 font-semibold text-gray-700 hover:bg-gray-100 px-3 py-1.5 rounded-lg transition-colors">
-                BAMBUS AI
-                <i class="ph ph-caret-down text-sm text-gray-400"></i>
-            </button>
+            <!-- Model Selector -->
+            <div class="relative">
+                <button onclick="toggleModelMenu()" class="flex items-center gap-2 font-semibold text-gray-700 hover:bg-gray-100 px-3 py-1.5 rounded-xl transition-colors text-lg">
+                    <span id="current-model">BAMBUS AI v</span>
+                    <i class="ph ph-caret-down text-sm text-gray-400"></i>
+                </button>
+                <!-- Model Dropdown -->
+                <div id="model-dropdown" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden flex-col py-1 w-48 z-30">
+                    <button onclick="selectModel('BAMBUS 3.5')" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 text-left w-full text-sm">
+                        <i class="ph ph-lightning text-green-500"></i> BAMBUS 3.5
+                    </button>
+                    <button onclick="selectModel('BAMBUS 4o')" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 text-left w-full text-sm">
+                        <i class="ph ph-star text-purple-500"></i> BAMBUS 4o
+                    </button>
+                </div>
+            </div>
             
-            <div class="flex items-center gap-3" id="header-auth-buttons">
-                <button id="btn-login-header" class="bg-black text-white px-4 py-1.5 rounded-full font-medium hover:bg-gray-800 transition-colors hidden sm:block">
+            <div class="flex items-center gap-3 md:hidden" id="header-auth-buttons">
+                <button onclick="openModal('modal-login')" class="bg-black text-white px-4 py-1.5 rounded-full font-medium hover:bg-gray-800 transition-colors">
                     Anmelden
                 </button>
-            </div>
-            <div class="hidden items-center gap-2 font-medium text-gray-700" id="header-user-profile">
-                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-green-400 to-blue-500 text-white flex items-center justify-center">
-                    P
-                </div>
             </div>
         </header>
 
         <div id="scroll-container" class="flex-1 overflow-y-auto w-full pt-14 flex flex-col relative">
             
-            <!-- Start Screen Layout (Initial state) -->
-            <div id="start-screen" class="flex-1 flex flex-col items-center justify-center px-4 w-full h-full min-h-[50vh] transition-opacity duration-300">
-                <h1 class="text-3xl font-semibold mb-8 text-center text-[#0d0d0d]">Wo sollen wir anfangen?</h1>
-                <!-- Dummy height to keep input centered before chat starts -->
-                <div class="h-16 w-full"></div>
-                <button class="border border-gray-200 text-gray-600 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors mt-8 shadow-sm">
-                    Was kannst du tun?
-                </button>
+            <!-- Start Screen -->
+            <div id="start-screen" class="flex-1 flex flex-col items-center justify-center px-4 w-full h-full min-h-[60vh] transition-opacity duration-300">
+                <div class="w-16 h-16 rounded-full border border-gray-200 flex items-center justify-center mb-6 shadow-sm">
+                    <i class="ph ph-leaf text-green-600 text-3xl"></i>
+                </div>
+                <h1 class="text-3xl font-semibold mb-12 text-center text-[#0d0d0d]">Wo sollen wir anfangen?</h1>
+                <div class="h-24 w-full"></div> <!-- Spacer for absolute input -->
             </div>
 
-            <!-- Chat Messages Area (Hidden initially) -->
-            <div id="chat-messages" class="hidden w-full max-w-[800px] mx-auto px-4 md:px-10 pb-32 flex-col gap-6 pt-8">
-                <!-- Messages will be injected here -->
+            <!-- Chat Messages (Hidden initially) -->
+            <div id="chat-messages" class="hidden w-full max-w-[800px] mx-auto px-4 md:px-10 pb-40 flex-col gap-6 pt-8">
+                <!-- Injected Messages -->
             </div>
         </div>
 
-        <!-- Input Box Area: Absolute positioned in center initially, moves to bottom on chat -->
-        <div id="input-wrapper" class="absolute left-0 w-full px-4 transition-all duration-500 ease-in-out flex flex-col items-center justify-center top-1/2 -translate-y-1/2">
+        <!-- Input Box Area -->
+        <div id="input-wrapper" class="absolute left-0 w-full px-4 md:px-10 transition-all duration-500 ease-in-out flex flex-col items-center justify-center top-1/2 -translate-y-1/2">
             <div class="max-w-[750px] mx-auto relative flex flex-col items-center w-full">
-                <form id="chat-form" class="w-full relative flex items-center bg-[#f4f4f4] rounded-[26px] border border-gray-200 focus-within:bg-white focus-within:shadow-md transition-all duration-200 shadow-sm">
+                
+                <form id="chat-form" class="w-full relative flex items-end bg-[#f4f4f4] rounded-3xl border border-gray-200 focus-within:bg-white focus-within:shadow-md transition-all duration-200 shadow-sm overflow-hidden">
                     
-                    <button type="button" class="absolute left-3 p-2 text-gray-500 hover:text-black transition-colors rounded-full">
-                        <i class="ph ph-plus text-xl"></i>
+                    <button type="button" class="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-black transition-colors rounded-full bg-white border border-gray-200 shadow-sm h-8 w-8 flex items-center justify-center hidden">
+                        <i class="ph ph-plus text-lg"></i>
                     </button>
                     
-                    <input 
-                        type="text" 
+                    <textarea 
                         id="user-input" 
+                        rows="1"
                         placeholder="BAMBUS AI fragen" 
-                        class="w-full bg-transparent pl-12 pr-24 py-4 focus:outline-none text-base placeholder-gray-500"
-                        autocomplete="off"
-                    >
+                        class="w-full bg-transparent pl-4 pr-24 py-4 focus:outline-none text-base placeholder-gray-500 resize-none max-h-48 overflow-y-auto leading-relaxed"
+                        style="min-height: 56px;"
+                    ></textarea>
                     
-                    <div class="absolute right-3 flex items-center gap-1">
+                    <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                         <button type="button" class="p-2 text-gray-500 hover:text-black transition-colors rounded-full" title="Spracheingabe">
                             <i class="ph ph-microphone text-xl"></i>
                         </button>
@@ -208,38 +232,39 @@
                 </form>
                 
                 <div id="disclaimer-text" class="text-xs text-gray-500 mt-3 text-center opacity-0 transition-opacity duration-300">
-                    Bambus AI kann Fehler machen. Überprüfe wichtige Informationen.
+                    BAMBUS AI kann Fehler machen. Überprüfe wichtige Informationen.
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Modal Backdrop Overlay -->
-    <div id="modal-overlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity duration-300"></div>
+    <!-- Modal Backdrop -->
+    <div id="modal-overlay" onclick="closeAllModals()" class="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-40 opacity-0 pointer-events-none transition-opacity duration-300"></div>
 
     <!-- Login Modal -->
     <div id="modal-login" class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 px-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 translate-y-4 transition-all duration-300 opacity-0">
-            <div class="p-6 relative">
-                <button class="modal-close absolute top-4 right-4 p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 translate-y-4 transition-all duration-300 opacity-0 modal-box">
+            <div class="p-8 relative">
+                <button onclick="closeAllModals()" class="absolute top-4 right-4 p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors">
                     <i class="ph ph-x text-lg"></i>
                 </button>
-                <div class="text-center mb-6">
+                <div class="text-center mb-8 mt-2">
+                    <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center mx-auto mb-4">
+                        <i class="ph ph-leaf text-green-600 text-2xl"></i>
+                    </div>
                     <h2 class="text-2xl font-semibold mb-1">Willkommen zurück</h2>
                     <p class="text-gray-500 text-sm">Melde dich bei BAMBUS AI an</p>
                 </div>
                 
                 <form id="login-form" class="flex flex-col gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Benutzername</label>
-                        <input type="text" id="login-username" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-black focus:ring-1 focus:ring-black" placeholder="kleinerPipmaz" required>
+                        <input type="text" id="login-username" class="w-full border border-gray-300 rounded-xl px-4 py-3.5 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-colors" placeholder="Benutzername (kleinerPipmaz)" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Passwort</label>
-                        <input type="password" id="login-password" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-black focus:ring-1 focus:ring-black" placeholder="••••••••" required>
+                        <input type="password" id="login-password" class="w-full border border-gray-300 rounded-xl px-4 py-3.5 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-colors" placeholder="Passwort (12345)" required>
                     </div>
-                    <div id="login-error" class="text-red-500 text-sm font-medium hidden">Ungültige Zugangsdaten. Bitte versuche es erneut.</div>
-                    <button type="submit" class="w-full bg-[#10a37f] text-white font-medium rounded-xl px-4 py-3 hover:bg-[#0e8a6a] transition-colors mt-2">
+                    <div id="login-error" class="text-red-500 text-sm font-medium hidden text-center">Nutzer oder Passwort falsch!</div>
+                    <button type="submit" class="w-full bg-[#10a37f] text-white font-medium rounded-xl px-4 py-3.5 hover:bg-[#0e8a6a] transition-colors mt-2 text-base">
                         Weiter
                     </button>
                 </form>
@@ -249,45 +274,191 @@
 
     <!-- iCloud Modal -->
     <div id="modal-icloud" class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 px-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-95 translate-y-4 transition-all duration-300 opacity-0 text-center p-8 relative">
-            <button class="modal-close absolute top-4 right-4 p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-95 translate-y-4 transition-all duration-300 opacity-0 text-center p-8 relative modal-box">
+            <button onclick="closeAllModals()" class="absolute top-4 right-4 p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors">
                 <i class="ph ph-x text-lg"></i>
             </button>
-            <i class="ph ph-cloud-arrow-down text-5xl text-blue-500 mb-4 mx-auto"></i>
-            <h3 class="text-xl font-semibold mb-2">Bilder laden</h3>
-            <p class="text-gray-600 mb-6">Bitte verbinde dich mit deiner iCloud, um Fotos zu laden und mit der KI zu analysieren.</p>
-            <button class="modal-close w-full bg-blue-500 text-white font-medium rounded-xl px-4 py-3 hover:bg-blue-600 transition-colors">
+            <i class="ph ph-cloud-arrow-down text-5xl text-blue-500 mb-4 mx-auto mt-2"></i>
+            <h3 class="text-xl font-semibold mb-2">iCloud verbinden</h3>
+            <p class="text-gray-600 mb-6 text-sm">Bitte verbinde dich mit deiner Apple iCloud, um Fotos direkt in BAMBUS AI zu analysieren.</p>
+            <button onclick="fakeLoading(this, 'Verbinde...')" class="w-full bg-blue-500 text-white font-medium rounded-xl px-4 py-3 hover:bg-blue-600 transition-colors">
                 Mit iCloud verbinden
             </button>
         </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div id="modal-settings" class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 px-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 translate-y-4 transition-all duration-300 opacity-0 relative">
+    <!-- Plugins Modal -->
+    <div id="modal-plugins" class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 translate-y-4 transition-all duration-300 opacity-0 relative modal-box">
             <div class="flex items-center justify-between border-b border-gray-100 p-4">
-                <h3 class="text-lg font-semibold">Einstellungen</h3>
-                <button class="modal-close p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors">
+                <h3 class="text-lg font-semibold">Plugin Store</h3>
+                <button onclick="closeAllModals()" class="p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors">
                     <i class="ph ph-x text-lg"></i>
                 </button>
             </div>
-            <div class="p-6 flex flex-col gap-4">
-                <div class="flex items-center justify-between">
-                    <span>Dark Mode</span>
-                    <div class="w-11 h-6 bg-gray-200 rounded-full relative cursor-not-allowed">
-                        <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 shadow-sm"></div>
+            <div class="p-4 flex flex-col gap-4 max-h-[60vh] overflow-y-auto">
+                <!-- Plugin 1 -->
+                <div class="flex items-center justify-between p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center"><i class="ph ph-globe text-xl"></i></div>
+                        <div>
+                            <div class="font-medium">Web Search</div>
+                            <div class="text-xs text-gray-500">Live-Daten aus dem Web</div>
+                        </div>
+                    </div>
+                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="toggle" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                        <label class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
                     </div>
                 </div>
-                <div class="flex items-center justify-between">
-                    <span>Zynismus-Level</span>
-                    <span class="text-red-500 font-bold">MAXIMAL</span>
+                <!-- Plugin 2 -->
+                <div class="flex items-center justify-between p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center"><i class="ph ph-chart-bar text-xl"></i></div>
+                        <div>
+                            <div class="font-medium">Data Analyzer</div>
+                            <div class="text-xs text-gray-500">Erstellt Grafiken & Charts</div>
+                        </div>
+                    </div>
+                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="toggle" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                        <label class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Pricing Modal -->
+    <div id="modal-pricing" class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 translate-y-4 transition-all duration-300 opacity-0 relative modal-box">
+            <div class="flex items-center justify-between border-b border-gray-100 p-4">
+                <h3 class="text-lg font-semibold">Dein Plan</h3>
+                <button onclick="closeAllModals()" class="p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors">
+                    <i class="ph ph-x text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Free Plan -->
+                <div class="border border-gray-200 rounded-xl p-4">
+                    <h4 class="font-semibold text-lg mb-1">Free</h4>
+                    <p class="text-gray-500 text-sm mb-4">USD $0 / Monat</p>
+                    <button class="w-full bg-gray-100 text-gray-500 font-medium rounded-lg py-2 cursor-not-allowed mb-4">Dein aktueller Plan</button>
+                    <ul class="text-sm text-gray-600 flex flex-col gap-2">
+                        <li class="flex items-center gap-2"><i class="ph ph-check text-gray-400"></i> Standard Antwortzeiten</li>
+                        <li class="flex items-center gap-2"><i class="ph ph-check text-gray-400"></i> Reguläre Updates</li>
+                    </ul>
+                </div>
+                <!-- Plus Plan -->
+                <div class="border border-green-500 rounded-xl p-4 bg-green-50/30 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-bl-lg">POPULÄR</div>
+                    <h4 class="font-semibold text-lg mb-1">Plus</h4>
+                    <p class="text-gray-500 text-sm mb-4">USD $20 / Monat</p>
+                    <button onclick="triggerPaymentError()" class="w-full bg-[#10a37f] text-white font-medium rounded-lg py-2 hover:bg-[#0e8a6a] transition-colors mb-4 shadow-sm">
+                        Auf Plus upgraden
+                    </button>
+                    <ul class="text-sm text-gray-600 flex flex-col gap-2">
+                        <li class="flex items-center gap-2"><i class="ph ph-check text-green-500"></i> Zugang zu BAMBUS 4o</li>
+                        <li class="flex items-center gap-2"><i class="ph ph-check text-green-500"></i> Schnelle Antwortzeiten</li>
+                        <li class="flex items-center gap-2"><i class="ph ph-check text-green-500"></i> Beta-Features</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="modal-settings" class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform scale-95 translate-y-4 transition-all duration-300 opacity-0 relative modal-box flex flex-col md:flex-row h-[70vh] md:h-auto">
+            
+            <div class="w-full md:w-1/3 border-r border-gray-100 p-4 flex flex-col gap-1 bg-gray-50">
+                <h3 class="text-lg font-semibold mb-4 px-2">Einstellungen</h3>
+                <button onclick="switchSettingsTab('allgemein')" class="settings-tab active flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-200 font-medium w-full text-left">
+                    <i class="ph ph-gear"></i> Allgemein
+                </button>
+                <button onclick="switchSettingsTab('daten')" class="settings-tab flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-200 font-medium w-full text-left transition-colors">
+                    <i class="ph ph-database"></i> Datenkontrolle
+                </button>
+            </div>
+            
+            <div class="flex-1 p-6 relative">
+                <button onclick="closeAllModals()" class="absolute top-4 right-4 p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors">
+                    <i class="ph ph-x text-lg"></i>
+                </button>
+                
+                <!-- Tab: Allgemein -->
+                <div id="tab-allgemein" class="settings-content flex flex-col gap-6 mt-4">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-4">
+                        <div>
+                            <div class="font-medium">Design</div>
+                            <div class="text-sm text-gray-500">System, Hell, Dunkel</div>
+                        </div>
+                        <select class="border border-gray-300 rounded-lg px-3 py-1.5 bg-white text-sm outline-none">
+                            <option>System</option>
+                            <option selected>Hell</option>
+                            <option>Dunkel (Coming soon)</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-4">
+                        <div>
+                            <div class="font-medium">Zynismus-Level</div>
+                            <div class="text-sm text-gray-500">Stellt die Frechheit der KI ein</div>
+                        </div>
+                        <span class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-bold">MAXIMAL</span>
+                    </div>
+                </div>
+
+                <!-- Tab: Daten -->
+                <div id="tab-daten" class="settings-content hidden flex-col gap-6 mt-4">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-4">
+                        <div>
+                            <div class="font-medium">Chatverlauf & Training</div>
+                            <div class="text-sm text-gray-500">Erlaube das Training mit deinen extrem dummen Fragen.</div>
+                        </div>
+                        <div class="relative inline-block w-10 align-middle select-none">
+                            <input type="checkbox" checked class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                            <label class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="modal-help" class="fixed inset-0 z-50 flex items-center justify-end opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white shadow-2xl w-full max-w-sm h-full overflow-y-auto transform translate-x-full transition-transform duration-300 opacity-100 modal-box-slide">
+            <div class="flex items-center justify-between border-b border-gray-100 p-5 sticky top-0 bg-white">
+                <h3 class="text-lg font-semibold">Hilfe & FAQ</h3>
+                <button onclick="closeAllModals()" class="p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors">
+                    <i class="ph ph-x text-lg"></i>
+                </button>
+            </div>
+            <div class="p-5 flex flex-col gap-4">
+                <div class="border border-gray-200 rounded-xl p-4">
+                    <div class="font-semibold mb-2">Warum ist BAMBUS AI so unhöflich?</div>
+                    <div class="text-gray-600 text-sm">Weil die Entwickler es leid waren, immer höfliche Standardantworten zu lesen. Deal with it.</div>
+                </div>
+                <div class="border border-gray-200 rounded-xl p-4">
+                    <div class="font-semibold mb-2">Wie importiere ich meine Daten?</div>
+                    <div class="text-gray-600 text-sm">Diese Funktion ist derzeit blockiert. Schreib dir deine alten Chats auf einen Zettel.</div>
+                </div>
+                <div class="border border-gray-200 rounded-xl p-4">
+                    <div class="font-semibold mb-2">Wo ist der Dark Mode?</div>
+                    <div class="text-gray-600 text-sm">Zu viel Dunkelheit ist schlecht fürs Gemüt. Bleib im Licht.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Red Error Toast -->
+    <div id="error-toast" class="fixed top-4 right-4 bg-red-500 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 transform -translate-y-20 opacity-0 transition-all duration-300 z-[100]">
+        <i class="ph ph-warning-circle text-xl"></i>
+        <span class="font-medium">Zahlungsserver nicht erreichbar!</span>
+    </div>
+
     <script>
-        // Sarcastic Responses Database (20 items)
+        // Sarcastic Responses Database
         const responses = [
             "Ich glaube, die Frage ist zu dumm, um sie zu beantworten.",
             "Eigentlich solltest du das wissen.",
@@ -311,7 +482,7 @@
             "Ich streike. Frag deinen Therapeuten."
         ];
 
-        // Chat Elements
+        // Elements
         const form = document.getElementById('chat-form');
         const input = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
@@ -321,35 +492,70 @@
         const inputWrapper = document.getElementById('input-wrapper');
         const disclaimer = document.getElementById('disclaimer-text');
         
-        let isFirstMessage = true;
+        let hasStartedChat = false;
+        let currentModel = 'BAMBUS 3.5';
 
-        input.addEventListener('input', () => {
-            if (input.value.trim().length > 0) {
+        // Auto-resize textarea
+        input.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            
+            if (this.value.trim().length > 0) {
                 sendBtn.removeAttribute('disabled');
+                sendBtn.classList.remove('opacity-30');
             } else {
                 sendBtn.setAttribute('disabled', 'true');
+                sendBtn.classList.add('opacity-30');
+            }
+        });
+
+        // Submit on Enter (without shift)
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if(this.value.trim().length > 0) {
+                    form.dispatchEvent(new Event('submit'));
+                }
             }
         });
 
         function transitionToChat() {
-            if (isFirstMessage) {
-                // Hide Start Screen
+            if (!hasStartedChat) {
                 startScreen.classList.add('hidden');
                 
-                // Show Chat Area
                 chatMessages.classList.remove('hidden');
                 chatMessages.classList.add('flex');
                 
-                // Move Input Wrapper to Bottom
                 inputWrapper.classList.remove('top-1/2', '-translate-y-1/2');
                 inputWrapper.classList.add('bottom-0', 'bg-gradient-to-t', 'from-white', 'via-white', 'to-transparent', 'pb-6', 'pt-10');
                 
-                // Show disclaimer
                 disclaimer.classList.remove('opacity-0');
                 disclaimer.classList.add('opacity-100');
 
-                isFirstMessage = false;
+                hasStartedChat = true;
             }
+        }
+
+        function resetChat() {
+            hasStartedChat = false;
+            chatMessages.innerHTML = '';
+            chatMessages.classList.add('hidden');
+            chatMessages.classList.remove('flex');
+            
+            startScreen.classList.remove('hidden');
+            
+            inputWrapper.classList.add('top-1/2', '-translate-y-1/2');
+            inputWrapper.classList.remove('bottom-0', 'bg-gradient-to-t', 'from-white', 'via-white', 'to-transparent', 'pb-6', 'pt-10');
+            
+            disclaimer.classList.remove('opacity-100');
+            disclaimer.classList.add('opacity-0');
+            
+            input.value = '';
+            input.style.height = 'auto';
+            sendBtn.setAttribute('disabled', 'true');
+            sendBtn.classList.add('opacity-30');
+            
+            closeAllMenus();
         }
 
         function scrollToBottom() {
@@ -363,8 +569,8 @@
             const userDiv = document.createElement('div');
             userDiv.className = 'w-full flex justify-end animate-message';
             userDiv.innerHTML = `
-                <div class="bg-gray-100 text-[#0d0d0d] px-5 py-3 rounded-3xl rounded-tr-sm max-w-[70%] break-words shadow-sm">
-                    ${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
+                <div class="bg-gray-100 text-[#0d0d0d] px-5 py-3 rounded-3xl rounded-tr-sm max-w-[75%] break-words shadow-sm text-[15px]">
+                    ${text.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}
                 </div>
             `;
             chatMessages.appendChild(userDiv);
@@ -375,7 +581,7 @@
             const aiDiv = document.createElement('div');
             aiDiv.className = 'w-full flex justify-start animate-message mt-2';
             aiDiv.innerHTML = `
-                <div class="flex items-start gap-4 max-w-[80%]">
+                <div class="flex items-start gap-4 max-w-[85%] w-full">
                     <div class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center flex-shrink-0 bg-white shadow-sm mt-1">
                         <i class="ph ph-leaf text-green-600 text-lg"></i>
                     </div>
@@ -401,17 +607,19 @@
             appendUserMessage(message);
 
             input.value = '';
+            input.style.height = 'auto';
             sendBtn.setAttribute('disabled', 'true');
+            sendBtn.classList.add('opacity-30');
 
             const loadingElement = appendAILoading();
-            const delay = Math.floor(Math.random() * 800) + 1200; // 1.2s to 2s
+            const delay = Math.floor(Math.random() * 1000) + 1000; // 1s to 2s
             
             setTimeout(() => {
                 const randomResponse = responses[Math.floor(Math.random() * responses.length)];
                 const textContainer = loadingElement.querySelector('.flex-col');
                 textContainer.innerHTML = `
                     <span class="font-semibold text-gray-800 text-sm">BAMBUS AI</span>
-                    <div class="text-gray-800 leading-relaxed mt-1">
+                    <div class="text-gray-800 leading-relaxed mt-1 text-[15px]">
                         ${randomResponse}
                     </div>
                 `;
@@ -419,49 +627,114 @@
             }, delay);
         });
 
-        const modalOverlay = document.getElementById('modal-overlay');
-        const loginModal = document.getElementById('modal-login');
-        const icloudModal = document.getElementById('modal-icloud');
-        const settingsModal = document.getElementById('modal-settings');
-        let currentActiveModal = null;
+        // Modal Logic
+        const overlay = document.getElementById('modal-overlay');
+        let activeModal = null;
 
-        function openModal(modalEl) {
-            modalOverlay.classList.add('modal-active');
-            modalEl.classList.add('modal-active');
-            const content = modalEl.querySelector('div');
-            content.classList.add('modal-content-active');
-            currentActiveModal = modalEl;
+        function openModal(id) {
+            closeAllMenus();
+            const modal = document.getElementById(id);
+            if(!modal) return;
+            
+            overlay.classList.add('modal-active');
+            modal.classList.add('modal-active');
+            
+            // Handle different animations based on modal type
+            const contentBox = modal.querySelector('.modal-box');
+            if(contentBox) contentBox.classList.add('modal-content-active');
+            
+            const slideBox = modal.querySelector('.modal-box-slide');
+            if(slideBox) slideBox.classList.remove('translate-x-full');
+
+            activeModal = modal;
         }
 
-        function closeModal() {
-            if (!currentActiveModal) return;
-            modalOverlay.classList.remove('modal-active');
-            currentActiveModal.classList.remove('modal-active');
-            const content = currentActiveModal.querySelector('div');
-            content.classList.remove('modal-content-active');
-            currentActiveModal = null;
+        function closeAllModals() {
+            if(!activeModal) return;
+            
+            const contentBox = activeModal.querySelector('.modal-box');
+            if(contentBox) contentBox.classList.remove('modal-content-active');
+            
+            const slideBox = activeModal.querySelector('.modal-box-slide');
+            if(slideBox) slideBox.classList.add('translate-x-full');
+
+            activeModal.classList.remove('modal-active');
+            overlay.classList.remove('modal-active');
+            activeModal = null;
         }
 
-        // Close via buttons or clicking overlay
-        document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', closeModal));
-        modalOverlay.addEventListener('click', closeModal);
+        // Dropdown Logic
+        const userMenu = document.getElementById('user-dropdown');
+        const modelMenu = document.getElementById('model-dropdown');
 
-        // Sidebar & Header Triggers
-        document.getElementById('btn-login-header').addEventListener('click', () => openModal(loginModal));
-        document.getElementById('btn-login-sidebar').addEventListener('click', () => openModal(loginModal));
-        document.getElementById('btn-bilder').addEventListener('click', () => openModal(icloudModal));
-        document.getElementById('btn-settings').addEventListener('click', () => openModal(settingsModal));
-        
-        // Deep Research (Wikipedia)
-        document.getElementById('btn-research').addEventListener('click', () => {
-            window.open('https://de.wikipedia.org/w/index.php?search=Klabusterbeere', '_blank');
+        function toggleUserMenu() {
+            modelMenu.classList.add('hidden');
+            userMenu.classList.toggle('hidden');
+        }
+
+        function toggleModelMenu() {
+            userMenu.classList.add('hidden');
+            modelMenu.classList.toggle('hidden');
+        }
+
+        function selectModel(modelName) {
+            currentModel = modelName;
+            document.getElementById('current-model').textContent = currentModel + ' v';
+            modelMenu.classList.add('hidden');
+        }
+
+        function closeAllMenus() {
+            userMenu.classList.add('hidden');
+            modelMenu.classList.add('hidden');
+        }
+
+        // Close dropdowns on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#sidebar-auth-area')) userMenu.classList.add('hidden');
+            if (!e.target.closest('.relative') || e.target.closest('#chat-form')) modelMenu.classList.add('hidden');
         });
 
+        // Settings Tabs
+        function switchSettingsTab(tabName) {
+            document.querySelectorAll('.settings-tab').forEach(t => {
+                t.classList.remove('bg-gray-200');
+                t.classList.add('hover:bg-gray-200');
+            });
+            event.currentTarget.classList.add('bg-gray-200');
+            event.currentTarget.classList.remove('hover:bg-gray-200');
+
+            document.querySelectorAll('.settings-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).classList.add('flex');
+        }
+
+        // Toast Error
+        function triggerPaymentError() {
+            closeAllModals();
+            const toast = document.getElementById('error-toast');
+            toast.classList.add('toast-active');
+            setTimeout(() => {
+                toast.classList.remove('toast-active');
+            }, 3000);
+        }
+
+        // Fake Loading Button (iCloud)
+        function fakeLoading(btn, text) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="ph ph-spinner animate-spin text-lg inline-block align-middle mr-2"></i> ${text}`;
+            btn.classList.add('opacity-80', 'cursor-not-allowed');
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('opacity-80', 'cursor-not-allowed');
+                closeAllModals();
+            }, 1500);
+        }
+
+        // Login Logic
         const loginForm = document.getElementById('login-form');
         const loginError = document.getElementById('login-error');
-        const headerAuthBtns = document.getElementById('header-auth-buttons');
-        const headerUserProfile = document.getElementById('header-user-profile');
-        const sidebarLoginText = document.getElementById('sidebar-login-text');
+        const btnLoginSidebar = document.getElementById('btn-login-sidebar');
+        const btnUserProfile = document.getElementById('btn-user-profile');
 
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -472,23 +745,15 @@
                 loginError.classList.add('hidden');
                 
                 // Update UI state
-                headerAuthBtns.classList.add('hidden');
-                headerUserProfile.classList.remove('hidden');
-                headerUserProfile.classList.add('flex');
+                btnLoginSidebar.classList.add('hidden');
+                btnUserProfile.classList.remove('hidden');
+                btnUserProfile.classList.add('flex');
                 
-                sidebarLoginText.textContent = "kleinerPipmaz";
-                const sidebarIcon = document.getElementById('btn-login-sidebar').querySelector('i');
-                sidebarIcon.classList.remove('ph-sign-in');
-                sidebarIcon.classList.add('ph-user');
-                
-                closeModal();
-                
-                // Reset form
+                closeAllModals();
                 loginForm.reset();
             } else {
                 loginError.classList.remove('hidden');
-                // Shake animation for error
-                const modalBox = loginModal.querySelector('div');
+                const modalBox = activeModal.querySelector('.modal-box');
                 modalBox.style.transform = 'scale(1) translateX(5px)';
                 setTimeout(() => modalBox.style.transform = 'scale(1) translateX(-5px)', 100);
                 setTimeout(() => modalBox.style.transform = 'scale(1) translateX(5px)', 200);
@@ -496,6 +761,12 @@
             }
         });
 
+        function logout() {
+            btnLoginSidebar.classList.remove('hidden');
+            btnUserProfile.classList.add('hidden');
+            btnUserProfile.classList.remove('flex');
+            closeAllMenus();
+        }
     </script>
 </body>
 </html>
