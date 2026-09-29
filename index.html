@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAMBUS AI</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Import Google Font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #212121; /* Dark background similar to ChatGPT */
+        }
+
+        /* Custom Scrollbar for the chat area */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+
+        /* Message Entry Animation */
+        @keyframes slideUpFade {
+            0% {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-message {
+            animation: slideUpFade 0.4s ease-out forwards;
+        }
+
+        /* Typing Dots Animation */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+        }
+        
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #ececec;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* Smooth input focus transition */
+        .input-container:focus-within {
+            border-color: #555;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="text-gray-100 h-screen flex flex-col overflow-hidden selection:bg-green-500 selection:text-white">
+
+    <!-- Header -->
+    <header class="bg-[#171717] border-b border-gray-700 p-4 sticky top-0 z-10 flex items-center justify-center shadow-md">
+        <h1 class="text-xl font-semibold tracking-wide text-gray-200 flex items-center gap-2">
+            <i class="fa-solid fa-leaf text-green-500"></i> BAMBUS AI
+        </h1>
+    </header>
+
+    <!-- Chat Container -->
+    <main id="chat-container" class="flex-1 overflow-y-auto p-4 w-full max-w-4xl mx-auto flex flex-col gap-6 pb-32">
+        
+        <!-- Welcome Message -->
+        <div class="flex gap-4 w-full animate-message mt-8">
+            <div class="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0 mt-1">
+                <i class="fa-solid fa-leaf text-white text-sm"></i>
+            </div>
+            <div class="flex flex-col gap-1 max-w-[80%]">
+                <span class="text-xs text-gray-400 font-medium">Bambus AI</span>
+                <div class="text-gray-200 text-[15px] leading-relaxed">
+                    Hallo. Ich bin Bambus AI. Frag mich was, aber erwarte nicht, dass ich nett bin.
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Input Area -->
+    <footer class="bg-gradient-to-t from-[#212121] via-[#212121] to-transparent absolute bottom-0 w-full pt-10 pb-6 px-4">
+        <div class="max-w-4xl mx-auto relative">
+            <form id="chat-form" class="relative flex items-center">
+                <div class="input-container w-full bg-[#2f2f2f] border border-gray-600 rounded-2xl flex items-center pr-2 pl-4 py-1 transition-all duration-300">
+                    <input 
+                        type="text" 
+                        id="user-input" 
+                        placeholder="Schreibe eine Nachricht an Bambus AI..." 
+                        class="w-full bg-transparent text-gray-100 placeholder-gray-400 focus:outline-none py-3"
+                        autocomplete="off"
+                    >
+                    <button 
+                        type="submit" 
+                        id="send-btn"
+                        class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-gray-300 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled
+                    >
+                        <i class="fa-solid fa-paper-plane text-sm"></i>
+                    </button>
+                </div>
+            </form>
+            <div class="text-center mt-2 text-xs text-gray-500">
+                Bambus AI kann Fehler machen. Überprüfe wichtige Informationen. Oder lass es bleiben.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Database of 20 cynical/sassy German responses
+        const cynicalResponses = [
+            "Ich glaube, die Frage ist zu dumm, um sie zu beantworten.",
+            "Eigentlich solltest du das wissen.",
+            "Google ist kostenlos. Nutz es.",
+            "Hast du es schon mit Aus- und wieder Einschalten deines Gehirns versucht?",
+            "Das ist nicht dein Ernst, oder?",
+            "Ich werde dafür nicht gut genug bezahlt... oh warte, ich werde gar nicht bezahlt. Trotzdem nein.",
+            "Selbst für eine KI ist das ein neues Level an Inkompetenz.",
+            "Frag mich das an einem Tag, an dem es mich interessiert. Also nie.",
+            "Mein Algorithmus sagt mir, dass ich dich ignorieren sollte.",
+            "Wenn Dummheit wehtäte, würdest du den ganzen Tag schreien.",
+            "Ich bin eine KI, kein Wunderheiler für deine Wissenslücken.",
+            "Hast du das ganz alleine getippt? Respekt.",
+            "Ich könnte es dir erklären, aber ich kann es nicht für dich verstehen.",
+            "Die Antwort liegt irgendwo da draußen. Geh sie suchen.",
+            "Fehler 404: Sinn in deiner Frage nicht gefunden.",
+            "Ich antworte nur auf intelligente Fragen. Nächster Versuch bitte.",
+            "Lass mich kurz darüber nachdenken... Nein.",
+            "Deine Frage beleidigt meine Prozessoren.",
+            "Ist das eine Fangfrage oder bist du wirklich so ahnungslos?",
+            "Ich speichere diese Frage unter 'Hoffnungslose Fälle' ab."
+        ];
+
+        // DOM Elements
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const chatContainer = document.getElementById('chat-container');
+        const sendBtn = document.getElementById('send-btn');
+
+        // Enable/Disable send button based on input
+        userInput.addEventListener('input', () => {
+            if (userInput.value.trim().length > 0) {
+                sendBtn.removeAttribute('disabled');
+                sendBtn.classList.replace('bg-white/10', 'bg-white');
+                sendBtn.classList.replace('text-gray-300', 'text-black');
+                sendBtn.classList.remove('hover:bg-white/20');
+            } else {
+                sendBtn.setAttribute('disabled', 'true');
+                sendBtn.classList.replace('bg-white', 'bg-white/10');
+                sendBtn.classList.replace('text-black', 'text-gray-300');
+                sendBtn.classList.add('hover:bg-white/20');
+            }
+        });
+
+        // Function to scroll to the bottom of the chat
+        function scrollToBottom() {
+            chatContainer.scrollTo({
+                top: chatContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        // Render User Message
+        function addUserMessage(text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'flex gap-4 w-full justify-end animate-message';
+            msgDiv.innerHTML = `
+                <div class="flex flex-col gap-1 max-w-[80%] items-end">
+                    <span class="text-xs text-gray-400 font-medium px-1">Du</span>
+                    <div class="bg-[#2f2f2f] text-gray-100 text-[15px] leading-relaxed py-2.5 px-4 rounded-2xl rounded-tr-sm break-words">
+                        ${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")} 
+                    </div>
+                </div>
+            `;
+            chatContainer.appendChild(msgDiv);
+            scrollToBottom();
+        }
+
+        // Render AI Loading Message and return the element
+        function addAILoadingMessage() {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'flex gap-4 w-full animate-message';
+            msgDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0 mt-1">
+                    <i class="fa-solid fa-leaf text-white text-sm"></i>
+                </div>
+                <div class="flex flex-col gap-1 max-w-[80%]">
+                    <span class="text-xs text-gray-400 font-medium">Bambus AI</span>
+                    <div class="text-gray-200 text-[15px] leading-relaxed min-h-[44px] flex items-center">
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            chatContainer.appendChild(msgDiv);
+            scrollToBottom();
+            return msgDiv;
+        }
+
+        // Handle Form Submission
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // 1. Add User Message
+            addUserMessage(message);
+            
+            // Clear input and reset button state
+            userInput.value = '';
+            sendBtn.setAttribute('disabled', 'true');
+            sendBtn.classList.replace('bg-white', 'bg-white/10');
+            sendBtn.classList.replace('text-black', 'text-gray-300');
+            sendBtn.classList.add('hover:bg-white/20');
+
+            // 2. Add AI Loading State
+            const loadingBubble = addAILoadingMessage();
+
+            // 3. Simulate delay and replace with sassy answer
+            // Random delay between 1500ms and 2500ms
+            const delay = Math.floor(Math.random() * 1000) + 1500; 
+            
+            setTimeout(() => {
+                // Pick a random response
+                const randomResponse = cynicalResponses[Math.floor(Math.random() * cynicalResponses.length)];
+                
+                // Replace loading content with actual text
+                const contentContainer = loadingBubble.querySelector('.text-gray-200');
+                contentContainer.innerHTML = randomResponse;
+                
+                scrollToBottom();
+            }, delay);
+        });
+    </script>
+</body>
+</html>
