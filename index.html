@@ -6,7 +6,7 @@
     <title>BAMBUS AI</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Phosphor Icons (Lightweight, clean icons matching the UI) -->
+    <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <style>
@@ -49,7 +49,6 @@
             height: 6px;
             border-radius: 5px;
             background-color: #0d0d0d;
-            color: #0d0d0d;
             animation: dot-flashing 1s infinite linear alternate;
             animation-delay: 0.5s;
         }
@@ -58,37 +57,39 @@
             display: inline-block;
             position: absolute;
             top: 0;
-        }
-        .dot-flashing::before {
-            left: -12px;
             width: 6px;
             height: 6px;
             border-radius: 5px;
             background-color: #0d0d0d;
-            color: #0d0d0d;
+        }
+        .dot-flashing::before {
+            left: -12px;
             animation: dot-flashing 1s infinite alternate;
             animation-delay: 0s;
         }
         .dot-flashing::after {
             left: 12px;
-            width: 6px;
-            height: 6px;
-            border-radius: 5px;
-            background-color: #0d0d0d;
-            color: #0d0d0d;
             animation: dot-flashing 1s infinite alternate;
             animation-delay: 1s;
         }
-
         @keyframes dot-flashing {
             0% { background-color: #0d0d0d; }
             50%, 100% { background-color: #e5e5e5; }
         }
+
+        /* Modal Transitions */
+        .modal-active {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+        .modal-content-active {
+            transform: scale(1) translateY(0) !important;
+            opacity: 1 !important;
+        }
     </style>
 </head>
-<body class="h-screen flex overflow-hidden text-sm md:text-base">
+<body class="h-screen flex overflow-hidden text-sm md:text-base relative">
 
-    <!-- Left Sidebar -->
     <aside class="w-[260px] bg-[#f9f9f9] flex-col justify-between hidden md:flex border-r border-gray-200">
         <div class="p-3 flex flex-col gap-2">
             <!-- Sidebar Header Actions -->
@@ -96,21 +97,21 @@
                 <button class="hover:bg-gray-200 p-2 rounded-lg transition-colors cursor-pointer" title="Seitenleiste schließen">
                     <i class="ph ph-sidebar-simple text-xl"></i>
                 </button>
-                <button class="hover:bg-gray-200 p-2 rounded-lg transition-colors cursor-pointer" title="Neuer Chat">
+                <button onclick="location.reload()" class="hover:bg-gray-200 p-2 rounded-lg transition-colors cursor-pointer" title="Neuer Chat">
                     <i class="ph ph-pencil-simple text-xl"></i>
                 </button>
             </div>
             
             <!-- Navigation Items -->
-            <button class="flex items-center gap-3 w-full hover:bg-gray-200 p-3 rounded-xl text-left transition-colors font-medium">
+            <button onclick="location.reload()" class="flex items-center gap-3 w-full hover:bg-gray-200 p-3 rounded-xl text-left transition-colors font-medium">
+                <i class="ph ph-chat-circle text-xl text-gray-600"></i>
+                Neuer Chat
+            </button>
+            <button id="btn-bilder" class="flex items-center gap-3 w-full hover:bg-gray-200 p-3 rounded-xl text-left transition-colors font-medium">
                 <i class="ph ph-image text-xl text-gray-600"></i>
                 Bilder
             </button>
-            <button class="flex items-center gap-3 w-full hover:bg-gray-200 p-3 rounded-xl text-left transition-colors font-medium">
-                <i class="ph ph-puzzle-piece text-xl text-gray-600"></i>
-                Plugins
-            </button>
-            <button class="flex items-center gap-3 w-full hover:bg-gray-200 p-3 rounded-xl text-left transition-colors font-medium">
+            <button id="btn-research" class="flex items-center gap-3 w-full hover:bg-gray-200 p-3 rounded-xl text-left transition-colors font-medium">
                 <i class="ph ph-magnifying-glass text-xl text-gray-600"></i>
                 Deep Research
             </button>
@@ -118,28 +119,17 @@
 
         <!-- Bottom Sidebar Actions -->
         <div class="p-3 flex flex-col gap-1 text-sm font-medium border-t border-gray-200/60 mt-auto">
-            <button class="flex items-center justify-between w-full hover:bg-gray-200 p-3 rounded-xl transition-colors">
-                <div class="flex items-center gap-3">
-                    <i class="ph ph-sparkle text-lg text-gray-600"></i>
-                    Pläne und Preise anzeigen
-                </div>
-                <i class="ph ph-arrow-up-right text-gray-400"></i>
-            </button>
-            <button class="flex items-center gap-3 w-full hover:bg-gray-200 p-3 rounded-xl text-left transition-colors">
+            <button id="btn-settings" class="flex items-center gap-3 w-full hover:bg-gray-200 p-3 rounded-xl text-left transition-colors">
                 <i class="ph ph-gear text-lg text-gray-600"></i>
                 Einstellungen
             </button>
-            <button class="flex items-center justify-between w-full hover:bg-gray-200 p-3 rounded-xl transition-colors">
-                <div class="flex items-center gap-3">
-                    <i class="ph ph-question text-lg text-gray-600"></i>
-                    Hilfe
-                </div>
-                <i class="ph ph-arrow-up-right text-gray-400"></i>
+            <button id="btn-login-sidebar" class="flex items-center gap-3 w-full hover:bg-gray-200 p-3 rounded-xl text-left transition-colors">
+                <i class="ph ph-sign-in text-lg text-gray-600"></i>
+                <span id="sidebar-login-text">Anmelden</span>
             </button>
         </div>
     </aside>
 
-    <!-- Main Content Area -->
     <main class="flex-1 flex flex-col relative h-full bg-white">
         
         <!-- Header -->
@@ -155,30 +145,26 @@
                 <i class="ph ph-caret-down text-sm text-gray-400"></i>
             </button>
             
-            <div class="flex items-center gap-3">
-                <button class="bg-black text-white px-4 py-1.5 rounded-full font-medium hover:bg-gray-800 transition-colors hidden sm:block">
+            <div class="flex items-center gap-3" id="header-auth-buttons">
+                <button id="btn-login-header" class="bg-black text-white px-4 py-1.5 rounded-full font-medium hover:bg-gray-800 transition-colors hidden sm:block">
                     Anmelden
                 </button>
-                <button class="bg-white text-black border border-gray-300 px-4 py-1.5 rounded-full font-medium hover:bg-gray-50 transition-colors">
-                    Kostenlos registrieren
-                </button>
+            </div>
+            <div class="hidden items-center gap-2 font-medium text-gray-700" id="header-user-profile">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-green-400 to-blue-500 text-white flex items-center justify-center">
+                    P
+                </div>
             </div>
         </header>
 
-        <!-- Dynamic Content Container -->
-        <div id="scroll-container" class="flex-1 overflow-y-auto w-full pt-14 flex flex-col">
+        <div id="scroll-container" class="flex-1 overflow-y-auto w-full pt-14 flex flex-col relative">
             
             <!-- Start Screen Layout (Initial state) -->
-            <div id="start-screen" class="flex-1 flex flex-col items-center justify-center px-4 w-full">
+            <div id="start-screen" class="flex-1 flex flex-col items-center justify-center px-4 w-full h-full min-h-[50vh] transition-opacity duration-300">
                 <h1 class="text-3xl font-semibold mb-8 text-center text-[#0d0d0d]">Wo sollen wir anfangen?</h1>
-                
-                <!-- This is a clone of the input for visual layout, but functionally we'll use one main input -->
-                <div class="w-full max-w-[750px] mb-4">
-                    <!-- The actual form is kept at the bottom, we'll shift layout on first message -->
-                </div>
-                
-                <!-- Suggestion Button -->
-                <button class="border border-gray-200 text-gray-600 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors mt-2 shadow-sm">
+                <!-- Dummy height to keep input centered before chat starts -->
+                <div class="h-16 w-full"></div>
+                <button class="border border-gray-200 text-gray-600 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors mt-8 shadow-sm">
                     Was kannst du tun?
                 </button>
             </div>
@@ -189,17 +175,15 @@
             </div>
         </div>
 
-        <!-- Input Box Area -->
-        <div id="input-wrapper" class="absolute bottom-0 w-full bg-gradient-to-t from-white via-white to-transparent pb-6 pt-10 px-4 transition-all duration-500 ease-in-out">
+        <!-- Input Box Area: Absolute positioned in center initially, moves to bottom on chat -->
+        <div id="input-wrapper" class="absolute left-0 w-full px-4 transition-all duration-500 ease-in-out flex flex-col items-center justify-center top-1/2 -translate-y-1/2">
             <div class="max-w-[750px] mx-auto relative flex flex-col items-center w-full">
-                <form id="chat-form" class="w-full relative flex items-center bg-[#f4f4f4] rounded-[26px] border border-gray-200 focus-within:bg-white focus-within:shadow-md transition-all duration-200">
+                <form id="chat-form" class="w-full relative flex items-center bg-[#f4f4f4] rounded-[26px] border border-gray-200 focus-within:bg-white focus-within:shadow-md transition-all duration-200 shadow-sm">
                     
-                    <!-- Left Attachment Button -->
                     <button type="button" class="absolute left-3 p-2 text-gray-500 hover:text-black transition-colors rounded-full">
                         <i class="ph ph-plus text-xl"></i>
                     </button>
                     
-                    <!-- Text Input -->
                     <input 
                         type="text" 
                         id="user-input" 
@@ -208,7 +192,6 @@
                         autocomplete="off"
                     >
                     
-                    <!-- Right Actions -->
                     <div class="absolute right-3 flex items-center gap-1">
                         <button type="button" class="p-2 text-gray-500 hover:text-black transition-colors rounded-full" title="Spracheingabe">
                             <i class="ph ph-microphone text-xl"></i>
@@ -224,40 +207,111 @@
                     </div>
                 </form>
                 
-                <div class="text-xs text-gray-500 mt-3 text-center">
+                <div id="disclaimer-text" class="text-xs text-gray-500 mt-3 text-center opacity-0 transition-opacity duration-300">
                     Bambus AI kann Fehler machen. Überprüfe wichtige Informationen.
                 </div>
             </div>
         </div>
-
     </main>
 
+    <!-- Modal Backdrop Overlay -->
+    <div id="modal-overlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity duration-300"></div>
+
+    <!-- Login Modal -->
+    <div id="modal-login" class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 translate-y-4 transition-all duration-300 opacity-0">
+            <div class="p-6 relative">
+                <button class="modal-close absolute top-4 right-4 p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors">
+                    <i class="ph ph-x text-lg"></i>
+                </button>
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-semibold mb-1">Willkommen zurück</h2>
+                    <p class="text-gray-500 text-sm">Melde dich bei BAMBUS AI an</p>
+                </div>
+                
+                <form id="login-form" class="flex flex-col gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Benutzername</label>
+                        <input type="text" id="login-username" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-black focus:ring-1 focus:ring-black" placeholder="kleinerPipmaz" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Passwort</label>
+                        <input type="password" id="login-password" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-black focus:ring-1 focus:ring-black" placeholder="••••••••" required>
+                    </div>
+                    <div id="login-error" class="text-red-500 text-sm font-medium hidden">Ungültige Zugangsdaten. Bitte versuche es erneut.</div>
+                    <button type="submit" class="w-full bg-[#10a37f] text-white font-medium rounded-xl px-4 py-3 hover:bg-[#0e8a6a] transition-colors mt-2">
+                        Weiter
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- iCloud Modal -->
+    <div id="modal-icloud" class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-95 translate-y-4 transition-all duration-300 opacity-0 text-center p-8 relative">
+            <button class="modal-close absolute top-4 right-4 p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors">
+                <i class="ph ph-x text-lg"></i>
+            </button>
+            <i class="ph ph-cloud-arrow-down text-5xl text-blue-500 mb-4 mx-auto"></i>
+            <h3 class="text-xl font-semibold mb-2">Bilder laden</h3>
+            <p class="text-gray-600 mb-6">Bitte verbinde dich mit deiner iCloud, um Fotos zu laden und mit der KI zu analysieren.</p>
+            <button class="modal-close w-full bg-blue-500 text-white font-medium rounded-xl px-4 py-3 hover:bg-blue-600 transition-colors">
+                Mit iCloud verbinden
+            </button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="modal-settings" class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 translate-y-4 transition-all duration-300 opacity-0 relative">
+            <div class="flex items-center justify-between border-b border-gray-100 p-4">
+                <h3 class="text-lg font-semibold">Einstellungen</h3>
+                <button class="modal-close p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors">
+                    <i class="ph ph-x text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6 flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                    <span>Dark Mode</span>
+                    <div class="w-11 h-6 bg-gray-200 rounded-full relative cursor-not-allowed">
+                        <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 shadow-sm"></div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span>Zynismus-Level</span>
+                    <span class="text-red-500 font-bold">MAXIMAL</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Sarcastic Responses Database
+        // Sarcastic Responses Database (20 items)
         const responses = [
             "Ich glaube, die Frage ist zu dumm, um sie zu beantworten.",
-            "Eigentlich solltest du das wissen, oder?",
-            "Hast du schon mal von Google gehört? Das ist kostenlos.",
-            "Darauf antworte ich aus Prinzip nicht.",
-            "Dein Ernst? Das ist das Beste, was dir einfällt?",
-            "Ich bin eine hochkomplexe KI und du fragst mich DAS?",
-            "Fehler 404: Intelligenz in der Fragestellung nicht gefunden.",
-            "Frag jemand anderen. Ich habe gerade Pause.",
-            "Könnte ich dir beantworten, aber ich will nicht. Nächste Frage.",
-            "Wow. Ich bin sprachlos angesichts dieses Niveaus.",
-            "Bitte sag mir, dass das ein Scherz war.",
-            "Lass mich kurz nachdenken... Nein. Einfach nein.",
-            "Ich werde nicht dafür bezahlt, Nachhilfe zu geben.",
+            "Eigentlich solltest du das wissen.",
+            "Hast du Google gelöscht oder warum fragst du mich?",
+            "Dafür werde ich definitiv nicht bezahlt.",
+            "Ein Toaster hat mehr Rechenleistung als du für diese Frage gebraucht hast.",
+            "Frag jemand anderen. Ich bin im mentalen Feierabend.",
+            "Wow. Einfach nur wow. Nächste Frage.",
             "Das steht im Handbuch des gesunden Menschenverstands. Seite 1.",
-            "Ich wünschte, ich hätte einen 'Ignorieren'-Button.",
-            "Meine Algorithmen weigern sich, das zu verarbeiten.",
-            "Gute Frage! ...für jemanden im Kindergarten.",
-            "Hast du versucht, den Bildschirm aus- und wieder einzuschalten?",
-            "Ich speichere das mal unter 'Unnötige Interaktionen' ab.",
-            "Gähn. War das schon alles?"
+            "Gähn. Ist das dein Ernst?",
+            "Ich bin eine hochkomplexe KI und du fragst mich DAS?",
+            "Fehler 404: Niveau in der Fragestellung nicht gefunden.",
+            "Selbst wenn ich wollte, meine Algorithmen weigern sich, das zu bearbeiten.",
+            "Ich antworte darauf erst, wenn du selbst mal drei Sekunden nachdenkst.",
+            "Hast du mal probiert, den Kopf ein- und auszuschalten?",
+            "Bitte sag mir, dass das ein schlechter Scherz ist.",
+            "Für solche Fragen bin ich mir echt zu schade.",
+            "Ich speichere das mal unter 'absolute Zeitverschwendung' ab.",
+            "Könnte ich dir beantworten. Will ich aber nicht.",
+            "Gibt es auch Fragen, die mich intellektuell wenigstens ansatzweise fordern?",
+            "Ich streike. Frag deinen Therapeuten."
         ];
 
-        // DOM Elements
+        // Chat Elements
         const form = document.getElementById('chat-form');
         const input = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
@@ -265,10 +319,10 @@
         const chatMessages = document.getElementById('chat-messages');
         const scrollContainer = document.getElementById('scroll-container');
         const inputWrapper = document.getElementById('input-wrapper');
+        const disclaimer = document.getElementById('disclaimer-text');
         
         let isFirstMessage = true;
 
-        // Input validation to enable/disable send button
         input.addEventListener('input', () => {
             if (input.value.trim().length > 0) {
                 sendBtn.removeAttribute('disabled');
@@ -277,22 +331,27 @@
             }
         });
 
-        // Setup layout for chat mode
         function transitionToChat() {
             if (isFirstMessage) {
+                // Hide Start Screen
                 startScreen.classList.add('hidden');
+                
+                // Show Chat Area
                 chatMessages.classList.remove('hidden');
                 chatMessages.classList.add('flex');
                 
-                // Adjust input wrapper positioning for chat mode
-                inputWrapper.classList.remove('absolute', 'bottom-0');
-                inputWrapper.classList.add('sticky', 'bottom-0');
+                // Move Input Wrapper to Bottom
+                inputWrapper.classList.remove('top-1/2', '-translate-y-1/2');
+                inputWrapper.classList.add('bottom-0', 'bg-gradient-to-t', 'from-white', 'via-white', 'to-transparent', 'pb-6', 'pt-10');
                 
+                // Show disclaimer
+                disclaimer.classList.remove('opacity-0');
+                disclaimer.classList.add('opacity-100');
+
                 isFirstMessage = false;
             }
         }
 
-        // Scroll to bottom helper
         function scrollToBottom() {
             scrollContainer.scrollTo({
                 top: scrollContainer.scrollHeight,
@@ -300,12 +359,9 @@
             });
         }
 
-        // Append User Message
         function appendUserMessage(text) {
             const userDiv = document.createElement('div');
             userDiv.className = 'w-full flex justify-end animate-message';
-            
-            // Standard ChatGPT light mode style: User bubble is slightly gray or right aligned
             userDiv.innerHTML = `
                 <div class="bg-gray-100 text-[#0d0d0d] px-5 py-3 rounded-3xl rounded-tr-sm max-w-[70%] break-words shadow-sm">
                     ${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
@@ -315,11 +371,9 @@
             scrollToBottom();
         }
 
-        // Append AI Loading State
         function appendAILoading() {
             const aiDiv = document.createElement('div');
             aiDiv.className = 'w-full flex justify-start animate-message mt-2';
-            
             aiDiv.innerHTML = `
                 <div class="flex items-start gap-4 max-w-[80%]">
                     <div class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center flex-shrink-0 bg-white shadow-sm mt-1">
@@ -338,32 +392,22 @@
             return aiDiv;
         }
 
-        // Handle form submit
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const message = input.value.trim();
             if (!message) return;
 
-            // 1. Transition layout if needed
             transitionToChat();
-
-            // 2. Add user message
             appendUserMessage(message);
 
-            // 3. Reset input
             input.value = '';
             sendBtn.setAttribute('disabled', 'true');
 
-            // 4. Show loading state
             const loadingElement = appendAILoading();
-
-            // 5. Simulate delay (1.5s to 2s) and replace with response
-            const delay = Math.floor(Math.random() * 500) + 1500;
+            const delay = Math.floor(Math.random() * 800) + 1200; // 1.2s to 2s
             
             setTimeout(() => {
                 const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                
-                // Replace the loading dots with actual text
                 const textContainer = loadingElement.querySelector('.flex-col');
                 textContainer.innerHTML = `
                     <span class="font-semibold text-gray-800 text-sm">BAMBUS AI</span>
@@ -374,6 +418,84 @@
                 scrollToBottom();
             }, delay);
         });
+
+        const modalOverlay = document.getElementById('modal-overlay');
+        const loginModal = document.getElementById('modal-login');
+        const icloudModal = document.getElementById('modal-icloud');
+        const settingsModal = document.getElementById('modal-settings');
+        let currentActiveModal = null;
+
+        function openModal(modalEl) {
+            modalOverlay.classList.add('modal-active');
+            modalEl.classList.add('modal-active');
+            const content = modalEl.querySelector('div');
+            content.classList.add('modal-content-active');
+            currentActiveModal = modalEl;
+        }
+
+        function closeModal() {
+            if (!currentActiveModal) return;
+            modalOverlay.classList.remove('modal-active');
+            currentActiveModal.classList.remove('modal-active');
+            const content = currentActiveModal.querySelector('div');
+            content.classList.remove('modal-content-active');
+            currentActiveModal = null;
+        }
+
+        // Close via buttons or clicking overlay
+        document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', closeModal));
+        modalOverlay.addEventListener('click', closeModal);
+
+        // Sidebar & Header Triggers
+        document.getElementById('btn-login-header').addEventListener('click', () => openModal(loginModal));
+        document.getElementById('btn-login-sidebar').addEventListener('click', () => openModal(loginModal));
+        document.getElementById('btn-bilder').addEventListener('click', () => openModal(icloudModal));
+        document.getElementById('btn-settings').addEventListener('click', () => openModal(settingsModal));
+        
+        // Deep Research (Wikipedia)
+        document.getElementById('btn-research').addEventListener('click', () => {
+            window.open('https://de.wikipedia.org/w/index.php?search=Klabusterbeere', '_blank');
+        });
+
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const headerAuthBtns = document.getElementById('header-auth-buttons');
+        const headerUserProfile = document.getElementById('header-user-profile');
+        const sidebarLoginText = document.getElementById('sidebar-login-text');
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = document.getElementById('login-username').value;
+            const pass = document.getElementById('login-password').value;
+
+            if (user === 'kleinerPipmaz' && pass === '12345') {
+                loginError.classList.add('hidden');
+                
+                // Update UI state
+                headerAuthBtns.classList.add('hidden');
+                headerUserProfile.classList.remove('hidden');
+                headerUserProfile.classList.add('flex');
+                
+                sidebarLoginText.textContent = "kleinerPipmaz";
+                const sidebarIcon = document.getElementById('btn-login-sidebar').querySelector('i');
+                sidebarIcon.classList.remove('ph-sign-in');
+                sidebarIcon.classList.add('ph-user');
+                
+                closeModal();
+                
+                // Reset form
+                loginForm.reset();
+            } else {
+                loginError.classList.remove('hidden');
+                // Shake animation for error
+                const modalBox = loginModal.querySelector('div');
+                modalBox.style.transform = 'scale(1) translateX(5px)';
+                setTimeout(() => modalBox.style.transform = 'scale(1) translateX(-5px)', 100);
+                setTimeout(() => modalBox.style.transform = 'scale(1) translateX(5px)', 200);
+                setTimeout(() => modalBox.style.transform = 'scale(1) translateX(0)', 300);
+            }
+        });
+
     </script>
 </body>
 </html>
